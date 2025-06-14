@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BLE Packets Acknowledgment</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            max-width: 700px;
+            margin: 2em auto;
+            font-family: system-ui, sans-serif;
+            line-height: 1.7;
+            padding: 0 1em;
+            background: #f4f4f4;
+            color: #222;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+        }
+        hr {
+            margin: 2em 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+        article {
+            margin-top: 2em;
+        }
+        .highlight_green {
+          background-color: #008000;
+        }
+        .highlight_red {
+          background-color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <p>
+        <a href="blog.html"><- Back to blog</a>
+    </p>
+    <h1>BLE Packets Acknowledgment</h1>
+    <hr>
+    <article>
+        <p>Bluetooth Low Energy (BLE) is a radio protocol providing a reliable way of exchanging data in a variety of environments using one of
+            the most loaded frequency bands - 2.4 GHz. Reliability of BLE communication is guaranteed on a Link layer by implementing acknowledgment rules.
+            The acknowledgment rules require a device to retransmit the data until it is acknowledged by a peer.</p>
+        <p>BLE specification defines rules of packets acknowledgment in the <a href="https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/Core-61/out/en/low-energy-controller/link-layer-specification.html#UUID-222304f1-cb53-e120-96d1-182df7905d7d" target="_blank" rel="noopener">4.5.9 Acknowledgment and flow control</a>.</p>
+        <h2>BLE Packet Structure</h2>
+        <p>Let's take a look at a simplified BLE packet structure.</p>
+        <table style="width:100%; border-collapse:collapse; text-align:center; margin-bottom:1em;">
+          <tr style="background-color:#eaeaea;">
+            <th colspan="3" style="border:1px solid #ccc; padding:8px;">Header</th>
+            <th style="border:1px solid #ccc; padding:8px;">Payload</th>
+            <th style="border:1px solid #ccc; padding:8px;">CRC</th>
+          </tr>
+          <tr>
+            <td style="border:1px solid #ccc; padding:8px;">...</td>
+            <td style="border:1px solid #ccc; padding:8px;">SN</td>
+            <td style="border:1px solid #ccc; padding:8px;">NESN</td>
+            <td style="border:1px solid #ccc; padding:8px;">Up to 251 bytes</td>
+            <td style="border:1px solid #ccc; padding:8px;">3 bytes</td>
+          </tr>
+        </table>
+        <p>Header contains several link-layer service fields,
+            for our article the most interesting fields are Sequence number (SN) and  Next expected sequence number (NESN).
+        Both SN and NESN fields are just a single bit.</p>
+        <p>Packet payload contains the user-data transmitted by a device. It can have length from 0 to 251 bytes. 0-byte length empty packets
+            are used to keep connection alive and to acknowledge data reception.</p>
+        <p>CRC field contains checksum of the packet
+        content. A device receiving packet calculates CRC of packet content and compares it to the CRC field in the packet in order
+        to check that the data content is not corrupted.</p>
+        <h2>ACK/NAK</h2>
+        <p>After verifying CRC of received packet, if the CRC is correct, the device acknowledges the packet (it is often referred to as ACK).
+            If the CRC doesn't match, or packet was not received at all, the device
+            doesn't acknowledge the packet (NAK or NACK).</p>
+        <p>The following rules apply when devices exchange data:</p>
+        <ul>
+            <li>When a device sends a packet, the NESN field indicates the SN
+                it expects to receive from the peer in the next incoming packet.</li>
+            <li>Upon receiving a packet, the device checks the NESN value against the SN of the last packet it sent.
+                If they differ, it means the previous packet was acknowledged (ACK);
+                if they are the same, it means the packet was not acknowledged (NAK), so the device must resend the previous data.</li>
+            <li>The device also checks the SN field. If it matches the NESN value previously sent,
+                the data is new and should be processed; if not, the data is a duplicate and can be ignored.</li>
+        </ul>
+        <h2>Example</h2>
+        <p>Let's illustrate the ACK and NAK with an example of devices A and B exchanging data in a connection.</p>
+        <table style="width:100%; border-collapse:collapse; text-align:center; margin-bottom:1em;">
+                <tr style="background-color:#eaeaea;">
+                <th style="border:1px solid #ccc; padding:8px;">#</th>
+                <th style="border:1px solid #ccc; padding:8px;">Sender</th>
+                <th style="border:1px solid #ccc; padding:8px;">SN</th>
+                <th style="border:1px solid #ccc; padding:8px;">NESN</th>
+                <th style="border:1px solid #ccc; padding:8px;">Payload</th>
+                <th style="border:1px solid #ccc; padding:8px;">Peer received packet</th>
+                <th style="border:1px solid #ccc; padding:8px;">Comment</th>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">1</td>
+                <td style="border:1px solid #ccc; padding:8px;">A</td>
+                <td id="sn1" style="border:1px solid #ccc; padding:8px;">0</td>
+                <td id="nesn1"
+                    onmouseover="document.getElementById('sn2').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('sn2').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">0</td>
+                <td style="border:1px solid #ccc; padding:8px;">P<sub>A</sub>1</td>
+                <td style="border:1px solid #ccc; padding:8px;">Yes</td>
+                <td style="border:1px solid #ccc; padding:8px;">A sends first data packet</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">2</td>
+                <td style="border:1px solid #ccc; padding:8px;">B</td>
+                <td id="sn2"
+                    onmouseover="document.getElementById('nesn1').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('nesn1').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">0</td>
+                <td id="nesn2"
+                    onmouseover="document.getElementById('sn3').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('sn3').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td style="border:1px solid #ccc; padding:8px;">(empty)</td>
+                <td style="border:1px solid #ccc; padding:8px;">Yes</td>
+                <td style="border:1px solid #ccc; padding:8px;">B acknowledges P<sub>A</sub>1</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">3</td>
+                <td style="border:1px solid #ccc; padding:8px;">A</td>
+                <td id="sn3"
+                    onmouseover="document.getElementById('nesn2').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('nesn2').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td id="nesn3"
+                    onmouseover="document.getElementById('sn4').classList.add('highlight_red'); this.classList.add('highlight_red')"
+                    onmouseout="document.getElementById('sn4').classList.remove('highlight_red'); this.classList.remove('highlight_red')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td style="border:1px solid #ccc; padding:8px;">P<sub>A</sub>2</td>
+                <td style="border:1px solid #ccc; padding:8px;">No</td>
+                <td style="border:1px solid #ccc; padding:8px;">A sends P<sub>A</sub>2, but B does not receive it</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">4</td>
+                <td style="border:1px solid #ccc; padding:8px;">B</td>
+                <td id="sn4"
+                    onmouseover="document.getElementById('nesn3').classList.add('highlight_red'); this.classList.add('highlight_red')"
+                    onmouseout="document.getElementById('nesn3').classList.remove('highlight_red'); this.classList.remove('highlight_red')"
+                    style="border:1px solid #ccc; padding:8px;">0</td>
+                <td id="nesn4"
+                    onmouseover="document.getElementById('sn5').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('sn5').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td style="border:1px solid #ccc; padding:8px;">(empty)</td>
+                <td style="border:1px solid #ccc; padding:8px;">No</td>
+                <td style="border:1px solid #ccc; padding:8px;">B repeats last ACK (no new data received)</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">5</td>
+                <td style="border:1px solid #ccc; padding:8px;">A</td>
+                <td id="sn5"
+                    onmouseover="document.getElementById('nesn4').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('nesn4').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td id="nesn5"
+                    onmouseover="document.getElementById('sn6').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('sn6').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td style="border:1px solid #ccc; padding:8px;">P<sub>A</sub>2</td>
+                <td style="border:1px solid #ccc; padding:8px;">Yes</td>
+                <td style="border:1px solid #ccc; padding:8px;">A retransmits P<sub>A</sub>2</td>
+            </tr>
+            <tr>
+                <td style="border:1px solid #ccc; padding:8px;">6</td>
+                <td style="border:1px solid #ccc; padding:8px;">B</td>
+                <td id="sn6"
+                    onmouseover="document.getElementById('nesn5').classList.add('highlight_green'); this.classList.add('highlight_green')"
+                    onmouseout="document.getElementById('nesn5').classList.remove('highlight_green'); this.classList.remove('highlight_green')"
+                    style="border:1px solid #ccc; padding:8px;">1</td>
+                <td id="nesn6" style="border:1px solid #ccc; padding:8px;">0</td>
+                <td style="border:1px solid #ccc; padding:8px;">(empty)</td>
+                <td style="border:1px solid #ccc; padding:8px;">Yes</td>
+                <td style="border:1px solid #ccc; padding:8px;">B acknowledges P<sub>A</sub>2</td>
+            </tr>
+        </table>
+        </table>
+        <h2>Conclusion</h2>
+        <p>By occupying only 2 bits of PDU header SN and NESN fields provide a simple way to make BLE connection a reliable transport.</p>
+        <p>A couple of important notes:
+        <ul>
+            <li>
+            A device retransmitting data is not allowed to modify content of a packet which is being retransmitted.
+            This means that if a device receives NAK packet, it must retransmit the same payload it had sent before.
+            This principle guarantees reliable delivery of data in BLE connections.
+            </li>
+            <li>
+            BLE specification provides other ways of communication between devices. Only BLE connection guarantees data delivery.
+            Other methods, such as advertising, or isochronous streams, do not guarantee data delivery and can be used for different purposes.
+            </li>
+        </ul>
+            
+        </p>
+        
+    </article>
+</body>
+</html>
