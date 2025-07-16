@@ -329,7 +329,7 @@
 
                 // Label
                 ctx.fillStyle = '#000';
-                ctx.font = `${12 * scale}px sans-serif`;
+                ctx.font = `${15 * scale}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText(bs.name, bs.x, bs.y - 15 * scale);
             });
@@ -368,8 +368,8 @@
                 const midY = (mousePos.y + bs.y) / 2;
 
                 // Draw distance and RSSI with scaled dimensions
-                const boxWidth = 50 * scale;
-                const boxHeight = 30 * scale;
+                const boxWidth = 80 * scale;
+                const boxHeight = 50 * scale;
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(midX - boxWidth/2, midY - boxHeight/2, boxWidth, boxHeight);
                 ctx.strokeStyle = '#333';
@@ -377,7 +377,7 @@
                 ctx.strokeRect(midX - boxWidth/2, midY - boxHeight/2, boxWidth, boxHeight);
 
                 ctx.fillStyle = '#000';
-                ctx.font = `${10 * scale}px sans-serif`;
+                ctx.font = `${16 * scale}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.fillText(`${distanceM}m`, midX, midY - 4 * scale);
                 ctx.fillText(`${rssi.toFixed(1)}dBm`, midX, midY + 8 * scale);
@@ -477,8 +477,8 @@
             </p>
         </p>
         <p>
-            However, this approach is incorrect. The formula above calculates correctly average of multiple values using
-            linear units so it can be used to find average value of signal power expresed in mW.
+            However, this approach is incorrect. The formula above can only be used to find average of linear units,
+            for example signal power expressed in mW.
             But due to logarithmic nature of RSSI (which is usually expressed in dBm) the formula should be transformed
             to convert dBm to mW first.
             So the correct approach would be the following:
@@ -643,7 +643,7 @@
                 back.
                 It might be costly in terms of computation power so there is a trade-off between
                 average RSSI calculations accuracy and processor load.</li>
-            <li>The same recommendations are relevant for other use-cases logarithmic absolute units.</li>
+            <li>The same recommendations are relevant for other logarithmic absolute units.</li>
         </ul>
         </p>
     </article>
