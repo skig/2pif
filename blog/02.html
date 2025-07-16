@@ -114,11 +114,11 @@
             <li>display signal strength to the user</li>
         </ul>
         </p>
-        <div style="display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 20px 0; justify-content: center;">
-            <div class="signal-bar bar1" style="width: 12px; height: 15px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
-            <div class="signal-bar bar2" style="width: 12px; height: 25px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
-            <div class="signal-bar bar3" style="width: 12px; height: 35px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
-            <div class="signal-bar bar4" style="width: 12px; height: 45px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
+        <div id="signal-bars" style="display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 20px 0; justify-content: center;">
+            <div class="signal-bar bar1" data-level="1" style="width: 12px; height: 15px; background: #ddd; border-radius: 2px; transition: background-color 0.2s; cursor: pointer;"></div>
+            <div class="signal-bar bar2" data-level="2" style="width: 12px; height: 25px; background: #ddd; border-radius: 2px; transition: background-color 0.2s; cursor: pointer;"></div>
+            <div class="signal-bar bar3" data-level="3" style="width: 12px; height: 35px; background: #ddd; border-radius: 2px; transition: background-color 0.2s; cursor: pointer;"></div>
+            <div class="signal-bar bar4" data-level="4" style="width: 12px; height: 45px; background: #ddd; border-radius: 2px; transition: background-color 0.2s; cursor: pointer;"></div>
         </div>
         <style>
             .bar1:hover {
@@ -157,7 +157,71 @@
             .bar3:has(~ .bar4:hover) {
                 background: #44aa44 !important;
             }
+
+            /* Touch-friendly classes for mobile */
+            .signal-bar.active-level-1 {
+                background: #ff4444 !important;
+            }
+            .signal-bar.active-level-2 {
+                background: #ffaa00 !important;
+            }
+            .signal-bar.active-level-3 {
+                background: #88dd88 !important;
+            }
+            .signal-bar.active-level-4 {
+                background: #44aa44 !important;
+            }
         </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const signalBars = document.querySelectorAll('.signal-bar');
+                let activeLevel = 0;
+
+                function updateSignalBars(level) {
+                    signalBars.forEach((bar, index) => {
+                        bar.className = 'signal-bar bar' + (index + 1);
+                        if (index + 1 <= level) {
+                            bar.classList.add('active-level-' + level);
+                        }
+                    });
+                }
+
+                function resetSignalBars() {
+                    signalBars.forEach((bar, index) => {
+                        bar.className = 'signal-bar bar' + (index + 1);
+                    });
+                }
+
+                signalBars.forEach(bar => {
+                    // Touch events for mobile
+                    bar.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        const level = parseInt(this.dataset.level);
+                        updateSignalBars(level);
+                    });
+
+                    bar.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        resetSignalBars();
+                    });
+
+                    // Click events as fallback
+                    bar.addEventListener('click', function(e) {
+                        const level = parseInt(this.dataset.level);
+                        if (activeLevel === level) {
+                            resetSignalBars();
+                            activeLevel = 0;
+                        } else {
+                            updateSignalBars(level);
+                            activeLevel = level;
+                        }
+                    });
+                });
+            });
+        </script>
+        <p style="text-align: center">
+            (Interactive. Use your mouse)
+        </p>
         <p>
             <ul><li>evaluate the location of the device using trilateration</ul></li>
         </p>
@@ -170,23 +234,48 @@
             const canvas = document.getElementById('trilaterationCanvas');
             const ctx = canvas.getContext('2d');
 
-            // Base station positions
-            const baseStations = [
-            { x: 330, y: 50, name: 'Base station 1' },   // Top center
-            { x: 100, y: 350, name: 'Base station 2' },  // Bottom left
-            { x: 560, y: 350, name: 'Base station 3' }   // Bottom right
-            ];
+            // Make canvas responsive
+            function resizeCanvas() {
+            const container = canvas.parentElement;
+            const containerWidth = container.clientWidth - 40; // Account for padding
+            const maxWidth = Math.min(containerWidth, 600);
+            const aspectRatio = 400 / 660; // height / width from original
 
-            let mousePos = { x: 330, y: 200 };
+            canvas.width = maxWidth;
+            canvas.height = Math.round(maxWidth * aspectRatio);
+            canvas.style.width = maxWidth + 'px';
+            canvas.style.height = Math.round(maxWidth * aspectRatio) + 'px';
+            }
+
+            // Base station positions (will be scaled)
+            function getBaseStations() {
+            const scaleX = canvas.width / 660;
+            const scaleY = canvas.height / 400;
+
+            return [
+                { x: 330 * scaleX, y: 50 * scaleY, name: 'Base station 1' },   // Top center
+                { x: 100 * scaleX, y: 350 * scaleY, name: 'Base station 2' },  // Bottom left
+                { x: 560 * scaleX, y: 350 * scaleY, name: 'Base station 3' }   // Bottom right
+            ];
+            }
+
+            let mousePos = { x: 0, y: 0 };
             let isMouseInside = false;
+
+            function initializeMousePos() {
+            const scaleX = canvas.width / 660;
+            const scaleY = canvas.height / 400;
+            mousePos = { x: 330 * scaleX, y: 200 * scaleY };
+            }
 
             function calculateDistance(x1, y1, x2, y2) {
             return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
             }
 
             function pixelsToMeters(pixels) {
-            // Scale: canvas is roughly 10m x 8m area
-            return (pixels / 66).toFixed(1); // 66 pixels ≈ 1 meter
+            // Scale: canvas represents roughly 10m x 8m area
+            const scaleX = canvas.width / 660;
+            return (pixels / (66 * scaleX)).toFixed(1); // 66 pixels ≈ 1 meter in original scale
             }
 
             function calculateRSSI(distancePixels) {
@@ -228,19 +317,21 @@
 
             function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const baseStations = getBaseStations();
+            const scale = canvas.width / 660;
 
             // Draw base stations
             baseStations.forEach(bs => {
                 ctx.fillStyle = '#007acc';
                 ctx.beginPath();
-                ctx.arc(bs.x, bs.y, 8, 0, 2 * Math.PI);
+                ctx.arc(bs.x, bs.y, 8 * scale, 0, 2 * Math.PI);
                 ctx.fill();
 
                 // Label
                 ctx.fillStyle = '#000';
-                ctx.font = '12px sans-serif';
+                ctx.font = `${12 * scale}px sans-serif`;
                 ctx.textAlign = 'center';
-                ctx.fillText(bs.name, bs.x, bs.y - 15);
+                ctx.fillText(bs.name, bs.x, bs.y - 15 * scale);
             });
 
             // Check if mouse is inside triangle
@@ -255,7 +346,7 @@
                 // Draw mobile device
                 ctx.fillStyle = '#ff6b6b';
                 ctx.beginPath();
-                ctx.arc(mousePos.x, mousePos.y, 6, 0, 2 * Math.PI);
+                ctx.arc(mousePos.x, mousePos.y, 6 * scale, 0, 2 * Math.PI);
                 ctx.fill();
 
                 // Draw lines and calculate RSSI for each base station
@@ -276,18 +367,20 @@
                 const midX = (mousePos.x + bs.x) / 2;
                 const midY = (mousePos.y + bs.y) / 2;
 
-                // Draw distance and RSSI
+                // Draw distance and RSSI with scaled dimensions
+                const boxWidth = 50 * scale;
+                const boxHeight = 30 * scale;
                 ctx.fillStyle = '#fff';
-                ctx.fillRect(midX - 25, midY - 20, 50, 30);
+                ctx.fillRect(midX - boxWidth/2, midY - boxHeight/2, boxWidth, boxHeight);
                 ctx.strokeStyle = '#333';
                 ctx.lineWidth = 1;
-                ctx.strokeRect(midX - 25, midY - 20, 50, 30);
+                ctx.strokeRect(midX - boxWidth/2, midY - boxHeight/2, boxWidth, boxHeight);
 
                 ctx.fillStyle = '#000';
-                ctx.font = '10px sans-serif';
+                ctx.font = `${10 * scale}px sans-serif`;
                 ctx.textAlign = 'center';
-                ctx.fillText(`${distanceM}m`, midX, midY - 8);
-                ctx.fillText(`${rssi.toFixed(1)}dBm`, midX, midY + 5);
+                ctx.fillText(`${distanceM}m`, midX, midY - 4 * scale);
+                ctx.fillText(`${rssi.toFixed(1)}dBm`, midX, midY + 8 * scale);
                 });
             }
             }
@@ -295,8 +388,8 @@
             function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             return {
-                x: e.clientX - rect.left,
-                y: e.clientY - rect.top
+                x: (e.clientX - rect.left) * (canvas.width / rect.width),
+                y: (e.clientY - rect.top) * (canvas.height / rect.height)
             };
             }
 
@@ -304,8 +397,8 @@
             const rect = canvas.getBoundingClientRect();
             const touch = e.touches[0];
             return {
-                x: touch.clientX - rect.left,
-                y: touch.clientY - rect.top
+                x: (touch.clientX - rect.left) * (canvas.width / rect.width),
+                y: (touch.clientY - rect.top) * (canvas.height / rect.height)
             };
             }
 
@@ -345,9 +438,21 @@
             draw();
             });
 
-            // Initial draw
+            // Handle window resize
+            window.addEventListener('resize', () => {
+            resizeCanvas();
+            initializeMousePos();
+            draw();
+            });
+
+            // Initialize
+            resizeCanvas();
+            initializeMousePos();
             draw();
         </script>
+        <p style="text-align: center">
+            (Interactive. Use your mouse)
+        </p>
         <p>
             Some of the use-cases mentioned above don't require accurate RSSI measurements, but others require RSSI
             measurement error to be as small as possible.
