@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>On the averaging of RSSI and other logarithmic values</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            max-width: 700px;
+            margin: 2em auto;
+            font-family: system-ui, sans-serif;
+            line-height: 1.7;
+            padding: 0 1em;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+        }
+
+        hr {
+            margin: 2em 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+        article {
+            margin-top: 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <p>
+        <a href="index.html"><- Back to blog</a>
+    </p>
+    <h1>On the averaging of RSSI and other logarithmic values</h1>
+    <hr>
+    <article>
+        <h2>Basics of dBm</h2>
+        <p>Engineers working in the wireless communication field often need to deal with physical values that differ by several orders of magnitude.
+            To simplify calculations and make operations easier to follow, logarithmic units are often used.
+            One such unit is dBm, which expresses the power level of a radio signal.
+        </p>
+        <p>
+            dBm is an absolute unit which shows how much bigger (in dB) certain value than 1 mW.
+            <p>
+                E.g., value of 0 dBm corresponds to a power which is 0 dB greater than 1 mW, thus it is 1 mW.
+                Value of +10 dBm corresponds to a power level which is 10 dB greater than 1 mW, so it is 10 mW.
+            </p>
+            In general dBm value can be converted to mW using the following formula:
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>P</mi>
+                    <mi>mW</mi>
+                </msub>
+                <mo>=</mo>
+                <mn>1</mn>
+                <mtext> mW </mtext>
+                <mo>×</mo>
+                <msup>
+                    <mn>10</mn>
+                    <mrow>
+                        <mo>(</mo>
+                        <msub>
+                            <mi>P</mi>
+                            <mi>dBm</mi>
+                        </msub>
+                        <mo>/</mo>
+                        <mn>10</mn>
+                        <mo>)</mo>
+                    </mrow>
+                </msup>
+            </math>
+            </p>
+            Conversion from mW to dBm correspondingly:
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>P</mi>
+                    <mi>dBm</mi>
+                </msub>
+                <mo>=</mo>
+                <mn>10</mn>
+                <mo>×</mo>
+                <msub>
+                    <mi>log</mi>
+                    <mn>10</mn>
+                </msub>
+                <mo>(</mo>
+                <mfrac>
+                    <msub>
+                        <mi>P</mi>
+                        <mi>mW</mi>
+                    </msub>
+                    <mrow>
+                        <mn>1</mn>
+                        <mtext> mW</mtext>
+                    </mrow>
+                </mfrac>
+                <mo>)</mo>
+            </math>
+            </p>
+        </p>
+        <h2>Averaging RSSI</h2>
+        <p>Often dBm values are used to express RSSI - Received Signal Strength Indicator.
+            It's a value that can be used for different purposes:
+        <ul>
+            <li>select which access point or base station to connect to</li>
+            <li>check the hardware works correctly</li>
+            <li>display signal strength to the user</li>
+        </ul>
+        </p>
+        <div style="display: flex; align-items: flex-end; gap: 4px; height: 60px; margin: 20px 0; justify-content: center;">
+            <div class="signal-bar bar1" style="width: 12px; height: 15px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
+            <div class="signal-bar bar2" style="width: 12px; height: 25px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
+            <div class="signal-bar bar3" style="width: 12px; height: 35px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
+            <div class="signal-bar bar4" style="width: 12px; height: 45px; background: #ddd; border-radius: 2px; transition: background-color 0.2s;"></div>
+        </div>
+        <style>
+            .bar1:hover {
+                background: #ff4444 !important;
+            }
+            .bar1:hover ~ .signal-bar {
+                background: #ddd !important;
+            }
+
+            .bar2:hover {
+                background: #ffaa00 !important;
+            }
+            .bar2:hover ~ .signal-bar {
+                background: #ddd !important;
+            }
+            .bar1:has(~ .bar2:hover) {
+                background: #ffaa00 !important;
+            }
+
+            .bar3:hover {
+                background: #88dd88 !important;
+            }
+            .bar3:hover ~ .signal-bar {
+                background: #ddd !important;
+            }
+            .bar1:has(~ .bar3:hover),
+            .bar2:has(~ .bar3:hover) {
+                background: #88dd88 !important;
+            }
+
+            .bar4:hover {
+                background: #44aa44 !important;
+            }
+            .bar1:has(~ .bar4:hover),
+            .bar2:has(~ .bar4:hover),
+            .bar3:has(~ .bar4:hover) {
+                background: #44aa44 !important;
+            }
+        </style>
+        <p>
+            <ul><li>evaluate the location of the device using trilateration</ul></li>
+        </p>
+        <div style="background: #f4f4f4; padding: 20px; border-radius: 8px; margin: 20px 0; position: relative; overflow: hidden;">
+
+            <canvas id="trilaterationCanvas" width="660" height="400" style="border: 1px solid #ddd; border-radius: 4px; cursor: crosshair; display: block; margin: 0 auto;"></canvas>
+        </div>
+
+        <script>
+            const canvas = document.getElementById('trilaterationCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // Base station positions
+            const baseStations = [
+            { x: 330, y: 50, name: 'Base station 1' },   // Top center
+            { x: 100, y: 350, name: 'Base station 2' },  // Bottom left
+            { x: 560, y: 350, name: 'Base station 3' }   // Bottom right
+            ];
+
+            let mousePos = { x: 330, y: 200 };
+            let isMouseInside = false;
+
+            function calculateDistance(x1, y1, x2, y2) {
+            return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            }
+
+            function pixelsToMeters(pixels) {
+            // Scale: canvas is roughly 10m x 8m area
+            return (pixels / 66).toFixed(1); // 66 pixels ≈ 1 meter
+            }
+
+            function calculateRSSI(distancePixels) {
+            const distanceMeters = parseFloat(pixelsToMeters(distancePixels));
+            const maxDistance = 5; // 5 meters
+            const minRSSI = -40; // -40 dBm at max distance
+            const maxRSSI = 0; // 0 dBm at 0 distance
+
+            if (distanceMeters >= maxDistance) return minRSSI;
+            if (distanceMeters === 0) return maxRSSI;
+
+            // Convert RSSI from dBm to mW for linear scale calculations
+            const maxPower_mW = Math.pow(10, maxRSSI / 10); // 1 mW at 0 dBm
+            const minPower_mW = Math.pow(10, minRSSI / 10); // 0.0001 mW at -40 dBm
+
+            // Inverse square relationship: P ∝ 1/d²
+            const powerRatio = 1 / (distanceMeters * distanceMeters);
+            const maxPowerRatio = 1 / (maxDistance * maxDistance);
+
+            // Normalize and scale the power
+            const normalizedRatio = powerRatio / (1 / (0.1 * 0.1)); // Normalize to reference distance of 0.1m
+            const clampedRatio = Math.min(normalizedRatio, 1);
+
+            // Linear interpolation in power domain
+            const power_mW = minPower_mW + (maxPower_mW - minPower_mW) * clampedRatio;
+
+            // Convert back to dBm
+            return 10 * Math.log10(power_mW);
+            }
+
+            function isPointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
+            const denominator = ((by - cy) * (ax - cx) + (cx - bx) * (ay - cy));
+            const a = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / denominator;
+            const b = ((cy - ay) * (px - cx) + (ax - cx) * (py - cy)) / denominator;
+            const c = 1 - a - b;
+
+            return a >= 0 && b >= 0 && c >= 0;
+            }
+
+            function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw base stations
+            baseStations.forEach(bs => {
+                ctx.fillStyle = '#007acc';
+                ctx.beginPath();
+                ctx.arc(bs.x, bs.y, 8, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Label
+                ctx.fillStyle = '#000';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(bs.name, bs.x, bs.y - 15);
+            });
+
+            // Check if mouse is inside triangle
+            const inTriangle = isPointInTriangle(
+                mousePos.x, mousePos.y,
+                baseStations[0].x, baseStations[0].y,
+                baseStations[1].x, baseStations[1].y,
+                baseStations[2].x, baseStations[2].y
+            );
+
+            if (isMouseInside && inTriangle) {
+                // Draw mobile device
+                ctx.fillStyle = '#ff6b6b';
+                ctx.beginPath();
+                ctx.arc(mousePos.x, mousePos.y, 6, 0, 2 * Math.PI);
+                ctx.fill();
+
+                // Draw lines and calculate RSSI for each base station
+                baseStations.forEach((bs, index) => {
+                const distance = calculateDistance(mousePos.x, mousePos.y, bs.x, bs.y);
+                const distanceM = pixelsToMeters(distance);
+                const rssi = calculateRSSI(distance);
+
+                // Draw line
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(mousePos.x, mousePos.y);
+                ctx.lineTo(bs.x, bs.y);
+                ctx.stroke();
+
+                // Calculate midpoint for text
+                const midX = (mousePos.x + bs.x) / 2;
+                const midY = (mousePos.y + bs.y) / 2;
+
+                // Draw distance and RSSI
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(midX - 25, midY - 20, 50, 30);
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(midX - 25, midY - 20, 50, 30);
+
+                ctx.fillStyle = '#000';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${distanceM}m`, midX, midY - 8);
+                ctx.fillText(`${rssi.toFixed(1)}dBm`, midX, midY + 5);
+                });
+            }
+            }
+
+            function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: e.clientX - rect.left,
+                y: e.clientY - rect.top
+            };
+            }
+
+            function getTouchPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            return {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+            }
+
+            // Mouse events
+            canvas.addEventListener('mouseenter', () => {
+            isMouseInside = true;
+            draw();
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+            isMouseInside = false;
+            draw();
+            });
+
+            canvas.addEventListener('mousemove', (e) => {
+            mousePos = getMousePos(e);
+            draw();
+            });
+
+            // Touch events for mobile
+            canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isMouseInside = true;
+            mousePos = getTouchPos(e);
+            draw();
+            });
+
+            canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            mousePos = getTouchPos(e);
+            draw();
+            });
+
+            canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseInside = false;
+            draw();
+            });
+
+            // Initial draw
+            draw();
+        </script>
+        <p>
+            Some of the use-cases mentioned above don't require accurate RSSI measurements, but others require RSSI
+            measurement error to be as small as possible.
+            For example, when a software performs RSSI-based localization, the accuracy of RSSI measurements directly
+            affects the accuracy of position estimation.
+            One of the most common ways of reducing measurement error is averaging.
+            The naive way of finding average RSSI is based on a well known formula:
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>RSSI</mi>
+                    <mtext>avg_naive</mtext>
+                </msub>
+                <mo>=</mo>
+                <mfrac>
+                    <mrow>
+                        <mi>sum(RSSI)</mi>
+                    </mrow>
+                    <mtext>num_elem</mtext>
+                </mfrac>
+            </math>
+            </p>
+        </p>
+        <p>
+            However, this approach is incorrect. The formula above calculates correctly average of multiple values using
+            linear units so it can be used to find average value of signal power expresed in mW.
+            But due to logarithmic nature of RSSI (which is usually expressed in dBm) the formula should be transformed
+            to convert dBm to mW first.
+            So the correct approach would be the following:
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>RSSI</mi>
+                    <mtext>avg</mtext>
+                </msub>
+                <mo>=</mo>
+                <mn>10</mn>
+                <mo>×</mo>
+                <msub>
+                    <mi>log</mi>
+                    <mn>10</mn>
+                </msub>
+                <mo>(</mo>
+                <msub>
+                    <mi>RSSI</mi>
+                    <mtext>avg_mW</mtext>
+                </msub>
+                <mo>)</mo>
+            </math>
+            </p>
+            where
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>RSSI</mi>
+                    <mtext>avg_mW</mtext>
+                </msub>
+                <mo>=</mo>
+                <mfrac>
+                    <mrow>
+                        <mi>sum</mi>
+                        <mo>(</mo>
+                        <msub>
+                            <mi>RSSI</mi>
+                            <mi>mW</mi>
+                        </msub>
+                        <mo>)</mo>
+                    </mrow>
+                    <mtext>num_elem</mtext>
+                </mfrac>
+            </math>
+            </p>
+            and
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <msub>
+                    <mi>RSSI</mi>
+                    <mi>mW</mi>
+                </msub>
+                <mo>=</mo>
+                <mn>1</mn>
+                <mtext> mW </mtext>
+                <mo>×</mo>
+                <msup>
+                    <mn>10</mn>
+                    <mrow>
+                        <mo>(</mo>
+                        <mi>RSSI</mi>
+                        <mo>/</mo>
+                        <mn>10</mn>
+                        <mo>)</mo>
+                    </mrow>
+                </msup>
+            </math>
+            </p>
+        </p>
+        <h2>Demonstration</h2>
+        <p>
+            By using a simple Python script we can find the error caused by naive RSSI averaging of two values.
+            The error depends only on the difference between averaged values (i.e., the error of averaging pair of [-10 dBm,
+            -20 dBm] is the same as the error of averaging [-20 dBm, -30 dBm]).
+            The error shown on the plot is calculated as follows:
+            <p style="text-align: center; font-size: 1.4em">
+            <math xmlns="http://www.w3.org/1998/Math/MathML">
+                <mi>error</mi>
+                <mo>=</mo>
+                <mfrac>
+                    <mrow>
+                        <msub>
+                            <mi>RSSI</mi>
+                            <mtext>avg_mW</mtext>
+                        </msub>
+                        <mo>-</mo>
+                        <msub>
+                            <mi>RSSI</mi>
+                            <mtext>avg_naive_mW</mtext>
+                        </msub>
+                    </mrow>
+                    <msub>
+                        <mi>RSSI</mi>
+                        <mtext>avg_mW</mtext>
+                    </msub>
+                </mfrac>
+            </math>
+            </p>
+        </p>
+        <p>
+            <img src="img/02_error_plot.png" alt="Plot demonstrating error of naive RSSI averaging of 2 values"
+                width="700">
+        </p>
+
+        <p>Average RSSI calculator:</p>
+        <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <div style="margin-bottom: 15px;">
+            <label for="rssi1">RSSI 1 (dBm): </label>
+            <input type="number" id="rssi1" value="0" step="1" style="padding: 5px; margin-left: 10px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+            <label for="rssi2">RSSI 2 (dBm): </label>
+            <input type="number" id="rssi2" value="-10" step="1" style="padding: 5px; margin-left: 10px;">
+            </div>
+            <button onclick="calculateAverages()" style="padding: 8px 16px; background: #007acc; color: white; border: none; border-radius: 4px; cursor: pointer;">Calculate</button>
+
+            <div id="results" style="margin-top: 20px; padding: 15px; background: #f8f8f8; border-radius: 4px; display: none;">
+            <p><strong>Naive Average:</strong> <span id="naiveAvg"></span> dBm (<span id="naiveAvg_mW"></span> mW)</p>
+            <p><strong>Actual Average:</strong> <span id="correctAvg"></span> dBm (<span id="correctAvg_mW"></span> mW)</p>
+            <p><strong>Error:</strong> <span id="error"></span>%</p>
+            </div>
+        </div>
+
+        <script>
+            function calculateAverages() {
+            const rssi1 = parseFloat(document.getElementById('rssi1').value);
+            const rssi2 = parseFloat(document.getElementById('rssi2').value);
+
+            if (isNaN(rssi1) || isNaN(rssi2)) {
+            alert('Please enter valid RSSI values');
+            return;
+            }
+
+            // Naive averaging
+            const naiveAvg = (rssi1 + rssi2) / 2;
+
+            // Correct averaging (convert to mW first)
+            const power1_mW = Math.pow(10, rssi1 / 10);
+            const power2_mW = Math.pow(10, rssi2 / 10);
+            const avgPower_mW = (power1_mW + power2_mW) / 2;
+            const correctAvg = 10 * Math.log10(avgPower_mW);
+
+            // Calculate error percentage
+            const naiveAvg_mW = Math.pow(10, naiveAvg / 10);
+            const error = (avgPower_mW - naiveAvg_mW) / avgPower_mW * 100;
+
+            // Display results
+            document.getElementById('naiveAvg').textContent = naiveAvg.toFixed(2);
+            document.getElementById('naiveAvg_mW').textContent = naiveAvg_mW.toFixed(6);
+            document.getElementById('correctAvg').textContent = correctAvg.toFixed(2);
+            document.getElementById('correctAvg_mW').textContent = avgPower_mW.toFixed(6);
+            document.getElementById('error').textContent = error.toFixed(2);
+            document.getElementById('results').style.display = 'block';
+            }
+        </script>
+        <h2>Summary</h2>
+        <ul>
+            <li>In the use-cases where RSSI accuracy is important, dBm measuremets should be converted to mW before
+                averaging.</li>
+            <li>Implementation of proper RSSI averaging requires additional math operations to convert dBm to mW and
+                back.
+                It might be costly in terms of computation power so there is a trade-off between
+                average RSSI calculations accuracy and processor load.</li>
+            <li>The same recommendations are relevant for other use-cases logarithmic absolute units.</li>
+        </ul>
+        </p>
+    </article>
+</body>
+
+</html>
