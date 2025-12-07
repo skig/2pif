@@ -26,8 +26,18 @@
             border: none;
             border-top: 1px solid #ddd;
         }
+
         article {
             margin-top: 2em;
+        }
+
+        .codebox {
+            background: #e9e9e9;
+            padding: 10px;
+            border: 1px solid #777777;
+            border-radius: 5px;
+            font-family: monospace;
+            overflow: auto;
         }
     </style>
 </head>
@@ -40,18 +50,85 @@
     <hr>
     <article>
         <h2>C language development</h2>
-         C keeps developing
-        <h2>bit-precise integers</h2>
+        <p>
+            C programming language is one of the most popular programming languages during the last decades.
+            It is used in the wide range of systems: from embedded applications running on low-cost MCUs to the modern
+            HPC clusters used for AI models training.
+            Such a remarkably broad scope of uses is explained by several factors:
+        <ul>
+            <li>C is relatively low-level, it gives a developer a lot of control over memory management and code
+                execution</li>
+            <li>A lot of fundamental legacy code is written in C</li>
+            <li>The language is quite stable. It doesn't change much over time which helps to keep backward
+                compatibility and reuse existing code in the new projects.</li>
+            <li>The language is simple and straightforward. It allows to compile existing code on the new platforms
+                easily</li>
+        </ul>
+        </p>
+        <p>
+            Nevertheless, C language keeps slowly changing. Its standard had four revisions in the past 30 years: C99,
+            C11, C17 and C23. Despite its name, C23 standard was released in 2024.
+            Now, in 2025, it is a good time to break down the changes made in the C23 standard in this blogpost.
+        </p>
+        <p>
+            C23 brought a lot of changes. Not all of them are implemented in the modern compilers. If you are willing to
+            try out new C23 features and to compile examples from
+            this blogpost, I would recommend to use GCC version 15 and newer, or LLVM Clang version 19 and newer.
+        </p>
+        <p>
+            Let's take a closer look at some of the major changes in C23.
+        </p>
+        <h2>bit-precise integer types</h2>
+        <p>
+            <strong>_BitInt(N)</strong> allows to define integer variable of arbitrary size (N) in bits.
+        </p>
+        <pre class="codebox"><code>#include <stdio.h>
 
+int main() {
+    printf("Hello, world!\n");
+    return 0;
+}</code></pre>
+        <p>
+            It can be used when solving solving problems requiring certain bit-width
+            such as modular arithmetics in cryptography (which may use, for example, 256-bit long values), or implementing network protocol with field lengths of several bits.
+        </p>
+        <p>
+            See the <a href="https://github.com/skig/c23_snippets/blob/master/bitint/main.c">code snippet</a> as an example of _BitInt(N).
+        </p>
         <h2>#embed</h2>
         <h2>enums with fixed underlying types</h2>
         <h2>constexp</h2>
         <h2>auto and typeof</h2>
+        <h2>A couple more things</h2>
+        <h2>Summary</h2>
+        <p>
+            C23 brought many changes to the language.
+        </p>
+        <p>
+            Some of them standardized the practices that were already implemented in most of the modern compilers as
+            extensions.
+            As an example, underlying enum types, or binary integer constants were already available in GCC, but now
+            they became part of the standard, which makes the code using these extensions more portable.
+        </p>
+        <p>
+            Other features are completely new. For example, #embed preprocessor directive. It simplifies certain
+            use-cases and makes life of developers easier.
+        </p>
+        <p>
+            It is unclear, which of the changes will be widely adopted by modern compilers, which of the changes will be
+            not understood and not used
+            by developers, and what changes will reveal new problems and make life harder. Only time will tell. And
+            while developers community slowly
+            start using the new C23 features, the WG14 working group is already working on the next revision of standard
+            - <a href="https://en.wikipedia.org/wiki/C2Y_(C_standard_revision)">C2Y</a> - which will bring even more
+            changes.
+        </p>
         <h2>Links</h2>
-            <ul>
-              <li><a href="https://github.com/skig/c23_snippets/tree/master">Code snippets of the described C23 features</a></li>
-              <li><a href="https://en.cppreference.com/w/c/23.html">C23 changes on cppreference.com</a></li>
-            </ul>
+        <ul>
+            <li><a href="https://github.com/skig/c23_snippets/tree/master">Code snippets of the described C23
+                    features</a></li>
+            <li><a href="https://en.cppreference.com/w/c/23.html">C23 changes on cppreference.com</a></li>
+        </ul>
 
         <!--Topics to cover: embed, enum types, bitint, ' digit separator, binary literal constants 0b, constexpr, auto, zero initializer, elifdef and elifndef, utf8 str, stdlib new functions memset_explicit, variable declaration after label -->
     </article>
