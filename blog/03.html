@@ -80,22 +80,27 @@
         </p>
         <h2>bit-precise integer types</h2>
         <p>
-            <strong>_BitInt(N)</strong> allows to define integer variable of arbitrary size (N) in bits.
+            <strong>_BitInt(N)</strong> allows to define int variable of N-bit size where N can be up to BITINT_MAXWIDTH defined in <limits.h>.
+                GCC 15, for example, has BITINT_MAXWIDTH=65535 which allows operating with quite large integers.
         </p>
-        <pre class="codebox"><code>#include <stdio.h>
-
-int main() {
-    printf("Hello, world!\n");
-    return 0;
+        <p>
+            This feature might be useful when operating with modular arithmetics in cryptography, or implementing network protocol with field lengths of several bits.
+        </p>
+        <p>Example of how _BitInt(N) can be used to implement N-bit counter:</p>
+        <pre class="codebox"><code>unsigned _BitInt(2) counter;
+for (int i = 0; i < 8; i++)
+{
+    /* prints 0 1 2 3 0 1 2 3 due to wrapping of 2-bit counter */
+    printf("%u ", counter++);
 }</code></pre>
         <p>
-            It can be used when solving solving problems requiring certain bit-width
-            such as modular arithmetics in cryptography (which may use, for example, 256-bit long values), or implementing network protocol with field lengths of several bits.
-        </p>
-        <p>
-            See the <a href="https://github.com/skig/c23_snippets/blob/master/bitint/main.c">code snippet</a> as an example of _BitInt(N).
+            See the <a href="https://github.com/skig/c23_snippets/blob/master/bitint/main.c">code snippet</a> as another example of _BitInt(N).
         </p>
         <h2>#embed</h2>
+        <p>Brand new preprocessor directive which allows to </p>
+        <p>
+            See <a href="https://github.com/skig/c23_snippets/blob/master/embed/main.c">a code snippet</a> demonstrating how to parse .wav file #embed-ded into source code.
+        </p>
         <h2>enums with fixed underlying types</h2>
         <h2>constexp</h2>
         <h2>auto and typeof</h2>
