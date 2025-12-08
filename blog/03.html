@@ -119,10 +119,81 @@ int main(void)
             how to parse .wav file #embed-ded into source code.
         </p>
         <h2>enums with fixed underlying types</h2>
-
-        <h2>constexp</h2>
+        Let's assume you have a library communicating using serialized protocol with the following message header type
+        defined in &lt;protocol.h&gt;
+        <pre class="codebox"><code>typedef struct __attribute__((packed))
+{
+    enum
+    {
+        _BROADCAST_MSG_TYPE,
+        _UNICAST_MSG_TYPE,
+    } msg_type;
+    char msg_len;
+} msg_header_pre_t;</code></pre>
+        <p>This type definition looks correct and the intention is quite clear. The message header contains two fields:
+            `msg_type` and `msg_len`.
+            However, this type definition is ambiguous when it comes to the fields size. The second field has a length
+            of 1 byte regardless of a compiler or platform because it uses char type.
+            But the `msg_type` field length is not defined properly because enum type doesn't have any size guarantees.
+            The standard only requires a compiler to
+            use a type that can fit all the possible enum values. In practice when compiling with GCC the
+            msg_header_pre_t size can be 2 (if --short-enums options is used), or 5.
+            Unfortunately this imbiguilty makes usage of such a type for communication between different libraries
+            complicated because they can be compiled with different flags, so the
+            field sizes will be different and the communication will be broken.
+        </p>
+        <p>
+            C23 solves this issue by allowing a developer to specify explicitly an integer type used for the given enum
+            field. This option was already availably in many
+            C compilers as an extension, but adding this feature to a standard make code more portable and the language
+            more reliable in general. Underlying type can be defined
+            using the following syntax:
+        </p>
+        <pre class="codebox"><code>enum : char
+{
+    _BROADCAST_MSG_TYPE,
+    _UNICAST_MSG_TYPE,
+} msg_type;</code></pre>
+        <p>
+            See full example of enums with underlying types <a
+                href="https://github.com/skig/c23_snippets/blob/master/enums/main.c">here</a>.
+        </p>
+        <h2>constexpr</h2>
+        <p>
+            Allows to calculate values of scalar objects during compile-time. Unlike C++ constexpr, the C constexpr
+            can't be
+            used to evaluate function values, it can only be used for variables.
+        </p>
         <h2>auto and typeof</h2>
+        <p>
+            Allows to improve code maintainability by assigning types for related objects implicitly. In the following
+            code snippet foo(), bar(), i and m have int type:
+        </p>
+        <pre class="codebox"><code>int foo(void)
+{
+    return 10;
+}
+
+typeof(foo()) bar(void)
+{
+    auto i = foo();
+    typeof(i) m = i / 2;
+    return m;
+}</code></pre>
         <h2>A couple more things</h2>
+        <p>
+            Small code readability improvements:
+            <ul>
+                <li>#elifdef directive is equivalent to #else if defined()</li>
+                <li>#elifndef directive is equivalent to #else if !defined()</li>
+                <li>0b00001111 syntax allows to define binary numbers</li>
+                <li>4'294'967'296 syntax allows to split digits in a number</li>
+            </ul>
+        </p>
+        <p>
+            See <a href="https://github.com/skig/c23_snippets/blob/master/misc/main.c">a code snippet</a> demonstrating
+            constexpr, auto, typeof and other small things.
+        </p>
         <h2>Summary</h2>
         <p>
             C23 brought many changes to the language.
