@@ -80,11 +80,13 @@
         </p>
         <h2>bit-precise integer types</h2>
         <p>
-            <strong>_BitInt(N)</strong> allows to define int variable of N-bit size where N can be up to BITINT_MAXWIDTH defined in <limits.h>.
+            <strong>_BitInt(N)</strong> allows to define int variable of N-bit size where N can be up to BITINT_MAXWIDTH
+            defined in <limits.h>.
                 GCC 15, for example, has BITINT_MAXWIDTH=65535 which allows operating with quite large integers.
         </p>
         <p>
-            This feature might be useful when operating with modular arithmetics in cryptography, or implementing network protocol with field lengths of several bits.
+            This feature might be useful when operating with modular arithmetics in cryptography, or implementing
+            network protocol with field lengths of several bits.
         </p>
         <p>Example of how _BitInt(N) can be used to implement N-bit counter:</p>
         <pre class="codebox"><code>unsigned _BitInt(2) counter;
@@ -94,14 +96,30 @@ for (int i = 0; i < 8; i++)
     printf("%u ", counter++);
 }</code></pre>
         <p>
-            See the <a href="https://github.com/skig/c23_snippets/blob/master/bitint/main.c">code snippet</a> as another example of _BitInt(N).
+            See the <a href="https://github.com/skig/c23_snippets/blob/master/bitint/main.c">code snippet</a> as another
+            example of _BitInt(N).
         </p>
         <h2>#embed</h2>
-        <p>Brand new preprocessor directive which allows to </p>
+        <p>Replaces `xxd -i` command and simplifies build system when you need to insert external file content to source
+            code. It can be used when there is need to insert media (icons, sound etc) to the executable, or when
+            processing some data which can be compiled-in during compilation. </p>
+        <p>Simple example of using the #embed to load text data:</p>
+        <pre class="codebox"><code>const char settings_json[] =
+{
+    #embed "compile_time_settings.json"
+};
+
+int main(void)
+{
+    load_settings(settings_json);
+    // ...
+}</code></pre>
         <p>
-            See <a href="https://github.com/skig/c23_snippets/blob/master/embed/main.c">a code snippet</a> demonstrating how to parse .wav file #embed-ded into source code.
+            See <a href="https://github.com/skig/c23_snippets/blob/master/embed/main.c">a code snippet</a> demonstrating
+            how to parse .wav file #embed-ded into source code.
         </p>
         <h2>enums with fixed underlying types</h2>
+
         <h2>constexp</h2>
         <h2>auto and typeof</h2>
         <h2>A couple more things</h2>
