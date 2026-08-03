@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2πf: Online BTSnoop Viewer</title>
+    <style>
+        body {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 2rem 1.25rem 3rem;
+            background-color: #f4f4f4;
+            color: #222;
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        main {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        code {
+            background: #f0f0f0;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        .primary-link {
+            font-size: 2em;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <p>
+            <a href="../../blog/index.html"><- Back to the blog index</a>
+        </p>
+
+        <h1>Online BTSnoop Viewer</h1>
+
+        <p>
+            BTSnoop files are used to store Host Controller Interface (HCI) logs.
+        </p>
+
+        <h2>How to capture BTSnoop files</h2>
+        <ol>
+            <li>
+                <strong><a href="https://man.archlinux.org/man/extra/bluez-utils/btmon.1.en">Linux with BlueZ</a>:</strong>
+                Run <code>sudo btmon -w btsnoop.log</code>.
+            </li>
+            <li>
+                <strong><a href="https://source.android.com/docs/core/connect/bluetooth/verifying_debugging">Android</a>:</strong>
+                Enable <code>Enable Bluetooth HCI snoop log</code> in
+                <code>Developer options</code>. Then save the logs locally, for example by
+                running <code>adb pull /data/misc/bluetooth/logs/btsnoop_hci.log</code>.
+            </li>
+            <li>
+                <strong><a href="https://docs.zephyrproject.org/latest/services/connectivity/bluetooth/bluetooth-tools.html#hci-tracing">Zephyr RTOS</a>:</strong>
+                Enable BT Monitor, for example with
+                <code>CONFIG_BT_DEBUG_MONITOR_UART=y</code>, then capture the logs with
+                <code>btmon</code>.
+            </li>
+        </ol>
+
+        <p>
+            The generated files can later be opened in the <a href="index.html">ICHCI tool</a>.
+        </p>
+
+        <p>
+            <a class="primary-link" href="index.html">Open the ICHCI tool</a>
+        </p>
+    </main>
+</body>
+</html>
