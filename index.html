@@ -3,49 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2πf: blog and tech projects</title>
+    <title>2πf: blog</title>
+    <meta name="description" content="Blog posts from 2πf about Bluetooth, signal processing, and the C language.">
+    <link rel="canonical" href="https://2pif.com/">
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
         }
-        .formula {
-            font-size: 3rem;
-            font-weight: bold;
-            display: flex;
-            gap: 10px;
-        }
-        .element {
-            opacity: 0;
-            transform: translateY(-50px);
-            animation: fadeIn 0.5s ease-out forwards;
-        }
-        .element:nth-child(1) { animation-delay: 0.12s; }
-        .element:nth-child(2) { animation-delay: 0.1s; }
-        .element:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-150px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="formula">
-        <span class="element">2</span>
-        <a href="blog/index.html" class="element" style="all: unset; cursor: pointer; display: inline; opacity: 0; transform: translateY(-50px); animation: fadeIn 0.5s ease-out forwards; animation-delay: 0.1s;">π</a>
-        <span class="element">f</span>
-    </div>
+    <h1>2πf: Blog</h1>
+    <p>
+        <a href="blog/01.html">01 - BLE Packets Acknowledgment</a>
+    </p>
+    <p>
+        <a href="blog/02.html">02 - On the averaging of RSSI and other logarithmic values</a>
+    </p>
+    <p>
+        <a href="blog/03.html">03 - C23 - new features added to the good old C</a>
+    </p>
+    <h1>2πf: Projects</h1>
+    <p>
+        <a href="prj/ichci/description.html">ICHCI - online HCI Bluetooth logs viewer for btsnoop files</a>
+    </p>
 </body>
 </html>
-
