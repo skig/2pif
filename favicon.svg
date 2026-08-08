@@ -1,0 +1,47 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 64 64"
+  role="img"
+  aria-label="Abstract geometric favicon"
+>
+  <defs>
+    <radialGradient id="bg" cx="35%" cy="25%" r="85%">
+      <stop offset="0" stop-color="#34205F"/>
+      <stop offset=".55" stop-color="#17103D"/>
+      <stop offset="1" stop-color="#090D26"/>
+    </radialGradient>
+  </defs>
+
+  <rect
+    width="64"
+    height="64"
+    rx="14"
+    fill="url(#bg)"
+  />
+
+  <circle
+    cx="21"
+    cy="36"
+    r="18"
+    fill="#FF22CE"
+  />
+
+  <circle
+    cx="40"
+    cy="24"
+    r="17"
+    fill="#008CFF"
+    fill-opacity=".90"
+  />
+
+  <rect
+    x="32"
+    y="32"
+    width="26"
+    height="18"
+    rx="7"
+    fill="#71faca"
+    fill-opacity=".95"
+    transform="rotate(34 43 44)"
+  />
+</svg>
