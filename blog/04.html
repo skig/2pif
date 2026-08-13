@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Should you worry about struct member order in C?</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Software engineering article about performance and security impact of struct member order in C and other system programming languages.">
+    <link rel="canonical" href="https://2pif.com/blog/04.html">
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+    <style>
+        body {
+            max-width: 900px;
+            margin: 2em auto;
+            font-family: system-ui, sans-serif;
+            line-height: 1.7;
+            padding: 0 1em;
+            background: #f4f4f4;
+            color: #222;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 0.5em;
+        }
+
+        hr {
+            margin: 2em 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+
+        article {
+            margin-top: 2em;
+        }
+
+        .codebox {
+            background: #e9e9e9;
+            padding: 10px;
+            border: 1px solid #777777;
+            border-radius: 5px;
+            font-family: monospace;
+            overflow: auto;
+        }
+
+        p code,
+        li code {
+            padding: 0.1em 0.35em;
+            border: 1px solid #d5d5d5;
+            border-radius: 4px;
+            background: #e4e3e3;
+            font-family: monospace;
+            font-size: 0.95em;
+        }
+
+        .demo {
+            margin: 2em 0;
+            padding: 1em;
+            border: 1px solid #cfcfcf;
+            border-radius: 6px;
+            background: #efefef;
+        }
+
+        .demo-controls {
+            display: grid;
+            gap: 0.75em;
+            margin-bottom: 1em;
+        }
+
+        .demo-summary {
+            font-family: monospace;
+        }
+
+        .demo-slider {
+            width: 100%;
+        }
+
+        .demo-boxes {
+            display: grid;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+            gap: 1em;
+        }
+
+        .demo-panel label {
+            display: block;
+            margin-bottom: 0.4em;
+            font-weight: 600;
+        }
+
+        .demo-panel textarea {
+            width: 100%;
+            min-height: 16em;
+            padding: 0.75em;
+            border: 1px solid #999999;
+            border-radius: 4px;
+            background: #fbfbfb;
+            color: #222;
+            font-family: monospace;
+            font-size: 0.9em;
+            line-height: 1.45;
+            box-sizing: border-box;
+        }
+
+        .demo-pahole textarea {
+            min-height: 17.5em;
+        }
+
+        .demo-performance textarea {
+            min-height: 19em;
+        }
+
+        @media (max-width: 720px) {
+            .demo-boxes {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <p>
+        <a href="/"><- Back to the main page</a>
+    </p>
+    <h2>Should you worry about struct member order in C?</h2>
+    <hr>
+    <article>
+        <h3>Short answer</h3>
+        <p>Probably, yes</p>
+        <h3>Longer answer</h3>
+        <p>System programming languages, such as C and C++, give developers a lot of freedom in how their program works in both algorithms - what the program does, and data layout - what kind of data is used in the program and how it is stored in memory. In this blog post I want to focus on a very specific topic - how the order of members in a struct affects program behavior.</p>
+        <p>Different languages treat struct member order differently. For instance, C language gives a developer full responsibility over how the data is structured. At the same time Rust allows a developer to either have full control over structure layout (when <code>#[repr(C)]</code> is used), or let the compiler try to reorder members on its own to have a smaller struct size (when <code>#[repr(Rust)]</code> is used). This article will focus on manual structure layout.</p>
+        <p>Also, some important topics, such as CPU cache locality, or packing structures, are not covered in this post.</p>
+
+        <h4>What happens when you reorder members in a struct</h4>
+
+        <p>Let's consider the following struct type defined in a program targeting <code>x86_64</code> platform:</p>
+        <pre class="codebox"><code>typedef struct {
+    uint64_t a;
+    uint32_t b;
+    uint16_t c;
+    uint8_t  d;
+} foo_t;</code></pre>
+        <p>The total amount of data that can be stored in the structure is <code>8 + 4 + 2 + 1 = 15 bytes</code>. However, if we create a simple program to print the actual size of the structure using <code>printf("size of foo_t: %zu\n", sizeof(foo_t))</code>, we will get a different result: <code>size of foo_t: 16</code>. Let's take a closer look at the actual alignment of data inside the struct using a Linux tool called <a href="https://linux.die.net/man/1/pahole">pahole</a>:</p>
+        <pre class="codebox"><code>pahole output:
+typedef struct {
+	uint64_t           a;                    /*     0     8 */
+	uint32_t           b;                    /*     8     4 */
+	uint16_t           c;                    /*    12     2 */
+	uint8_t            d;                    /*    14     1 */
+	/* padding: 1 */
+} foo_t;</code></pre>
+        <p>For each of the struct members pahole printed two values: offset from the start of the structure, and the member length.</p>
+        <p>It also printed a comment <code>/* padding: 1 */</code> at the end of the structure, meaning the compiler added an additional empty byte at the end of the structure which doesn't belong to any of the members, but which is required to fulfill structure alignment requirements.</p>
+        <p>In simplified form, the rules C compilers apply for the data structure are the following:</p>
+        <ol>
+            <li>Each member of a struct has an alignment requirement determined by its type. The compiler may insert padding bytes between members so that each member is placed at an offset satisfying its alignment requirement.</li>
+            <li>The alignment requirement of a struct is the maximum alignment requirement among its members. The compiler may add trailing padding bytes so that <code>sizeof(struct S)</code> is a multiple of <code>_Alignof(struct S)</code>. This guarantees that elements in an array of such structures are correctly aligned. For the example provided above, <code>_Alignof(foo_t) = 8</code> because of alignment requirements of <code>uint64_t a</code>, and the <code>sizeof(foo_t) = 16</code></li>
+        </ol>
+
+        <p>You can read more about alignment rules in C <a href="https://en.cppreference.com/c/language/object">here</a>.</p>
+
+        <h4>Memory usage</h4>
+        <p>Reordering structure members leads to a different total size of a structure, and, consequently, a different number of padding bytes added between members and at the end of a structure. Using the interactive tool below, you can find that the structure type <code>foo_t</code> can have 24 distinct orders of members, with the worst total size of 24 bytes (15 bytes of data + 9 padding bytes).</p>
+        <section class="demo demo-pahole">
+            <div class="demo-controls">
+                <label for="struct-variant-slider">Variant</label>
+                <input class="demo-slider" id="struct-variant-slider" type="range" min="1" max="24" value="1" step="1">
+                <div class="demo-summary" id="struct-variant-summary"></div>
+            </div>
+            <div class="demo-boxes">
+                <div class="demo-panel">
+                    <label for="struct-definition-box">Struct definition</label>
+                    <textarea id="struct-definition-box" readonly></textarea>
+                </div>
+                <div class="demo-panel">
+                    <label for="struct-pahole-box">Pahole output</label>
+                    <textarea id="struct-pahole-box" readonly></textarea>
+                </div>
+            </div>
+        </section>
+
+        <p>Hint: in order to minimize RAM usage of the structure, consider ordering members from the most strictly aligned to the least strictly aligned to reduce padding bytes.</p>
+
+        <h4>Performance</h4>
+        <p>In addition to memory usage penalties, changing struct member order can affect program performance. Interestingly enough, changing the memory layout of a structure without changing program source code can lead to different compilation results.</p>
+        <p>Let's consider the following code</p>
+        <pre class="codebox"><code>#include &lt;stdint.h&gt;
+
+typedef struct {
+    uint8_t a;
+    uint8_t b;
+    uint8_t c;
+    uint8_t d;
+} struct_example_t;
+
+uint32_t foo(const struct_example_t *a) {
+    return a-&gt;a | (a-&gt;b &lt;&lt; 8) | (a-&gt;c &lt;&lt; 16) | (a-&gt;d &lt;&lt; 24);
+}</code></pre>
+        <p><code>foo()</code> builds a <code>uint32_t</code> value based on 4 <code>uint8_t</code> values provided in a struct. Compiling the function with <code>gcc -O3</code> for <code>x86_64</code> we can get the following result.</p>
+        <pre class="codebox"><code>0000000000000000 &lt;foo&gt;:
+   0:	8b 07                	mov    (%rdi),%eax
+   2:	c3                   	ret</code></pre>
+        <p>As you can see, the compiler managed to compile the function to just 2 assembly instructions, because of the convenient memory layout of <code>struct_example_t</code>: it doesn't need to perform any bit shifts or bitwise OR operations, all the data provided by a caller is already ordered in a way which can be packed into <code>uint32_t</code>.</p>
+        <p>However, we can easily find that changing <code>struct_example_t</code> member order without changing <code>foo()</code> implementation can produce much worse disassembly. Use the tool below to see the result of compilation of different type definitions.</p>
+        <section class="demo demo-performance">
+            <div class="demo-controls">
+                <label for="performance-variant-slider">Variant</label>
+                <input class="demo-slider" id="performance-variant-slider" type="range" min="1" max="24" value="1" step="1">
+                <div class="demo-summary" id="performance-variant-summary"></div>
+            </div>
+            <div class="demo-boxes">
+                <div class="demo-panel">
+                    <label for="performance-struct-box">Struct definition</label>
+                    <textarea id="performance-struct-box" readonly></textarea>
+                </div>
+                <div class="demo-panel">
+                    <label for="performance-asm-box">foo() disassembly</label>
+                    <textarea id="performance-asm-box" readonly></textarea>
+                </div>
+            </div>
+        </section>
+        <p>As you can see, in the worst case the function compiles to 11 assembly instructions instead of just 2 we had initially. Imagine how big of an impact it can have if <code>foo()</code> is being called in a hot path millions of times per second.</p>
+
+        <h3>Conclusion</h3>
+        <p>Famous quote of Donald Knuth states:</p>
+        <p><code>We should forget about small efficiencies, say about 97% of the time: premature optimization is the root of all evil. Yet we should not pass up our opportunities in that critical 3%.</code></p>
+        <p>Most of the time, optimizing the critical 3% involves higher level improvements, such as choosing the right data structure or implementing an algorithm with lower complexity. However, sometimes, when all the proper optimizations are already implemented, but the hot path still runs too slowly, it might be a good idea to try to rearrange memory layout to help the CPU digest the data more efficiently.</p>
+
+    </article>
+
+    <script src="./04_samples/struct_intro_variants.js"></script>
+    <script src="./04_samples/performance_penalty_variants.js"></script>
+    <script>
+        const structSlider = document.getElementById("struct-variant-slider");
+        const structSummary = document.getElementById("struct-variant-summary");
+        const structBox = document.getElementById("struct-definition-box");
+        const paholeBox = document.getElementById("struct-pahole-box");
+        const performanceSlider = document.getElementById("performance-variant-slider");
+        const performanceSummary = document.getElementById("performance-variant-summary");
+        const performanceStructBox = document.getElementById("performance-struct-box");
+        const performanceAsmBox = document.getElementById("performance-asm-box");
+
+        function renderStructVariant(index) {
+            const variant = STRUCT_INTRO_VARIANTS[index];
+            structSummary.textContent =
+                "Variant " + (index + 1) + " of " + STRUCT_INTRO_VARIANTS.length +
+                " | total size: " + variant.total_size + " bytes" +
+                " | total padding: " + variant.total_holes + " bytes";
+            structBox.value = variant.struct_text;
+            paholeBox.value = variant.pahole_text;
+        }
+
+        function renderPerformanceVariant(index) {
+            const variant = PERFORMANCE_PENALTY_VARIANTS[index];
+            performanceSummary.textContent =
+                "Variant " + (index + 1) + " of " + PERFORMANCE_PENALTY_VARIANTS.length +
+                " | instruction count: " + variant.instruction_count;
+            performanceStructBox.value = variant.struct_text;
+            performanceAsmBox.value = variant.asm_text;
+        }
+
+        structSlider.addEventListener("input", function () {
+            renderStructVariant(Number(structSlider.value) - 1);
+        });
+
+        performanceSlider.addEventListener("input", function () {
+            renderPerformanceVariant(Number(performanceSlider.value) - 1);
+        });
+
+        renderStructVariant(0);
+        renderPerformanceVariant(0);
+    </script>
+</body>
+
+</html>
