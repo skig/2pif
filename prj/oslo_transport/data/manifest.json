@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "grid_id": "oslo-region-v1",
+  "grid_file": "grid.geojson",
+  "mask_file": "regional-mask.geojson",
+  "destinations": [
+    {
+      "id": "it-fornebu",
+      "name": "IT Fornebu",
+      "latitude": 59.89555,
+      "longitude": 10.62791,
+      "data_file": "travel/it-fornebu.json"
+    },
+    {
+      "id": "skoyen",
+      "name": "Skøyen",
+      "latitude": 59.922383,
+      "longitude": 10.678512,
+      "data_file": "travel/skoyen.json"
+    },
+    {
+      "id": "oslo-s",
+      "name": "Oslo S",
+      "latitude": 59.910357,
+      "longitude": 10.753051,
+      "data_file": "travel/oslo-s.json"
+    },
+    {
+      "id": "majorstuen",
+      "name": "Majorstuen",
+      "latitude": 59.929213,
+      "longitude": 10.71634,
+      "data_file": "travel/majorstuen.json"
+    },
+    {
+      "id": "ensjo",
+      "name": "Ensjø",
+      "latitude": 59.914059,
+      "longitude": 10.787276,
+      "data_file": "travel/ensjo.json"
+    },
+    {
+      "id": "aker-brygge",
+      "name": "Aker Brygge",
+      "latitude": 59.910729,
+      "longitude": 10.729592,
+      "data_file": "travel/aker-brygge.json"
+    },
+    {
+      "id": "nationaltheatret",
+      "name": "Nationaltheatret",
+      "latitude": 59.914994,
+      "longitude": 10.7322,
+      "data_file": "travel/nationaltheatret.json"
+    },
+    {
+      "id": "nydalen",
+      "name": "Nydalen",
+      "latitude": 59.949063,
+      "longitude": 10.766848,
+      "data_file": "travel/nydalen.json"
+    },
+    {
+      "id": "lysaker",
+      "name": "Lysaker",
+      "latitude": 59.913205,
+      "longitude": 10.637359,
+      "data_file": "travel/lysaker.json"
+    },
+    {
+      "id": "alna",
+      "name": "Alna",
+      "latitude": 59.931839,
+      "longitude": 10.834451,
+      "data_file": "travel/alna.json"
+    },
+    {
+      "id": "okern",
+      "name": "Økern",
+      "latitude": 59.928324,
+      "longitude": 10.806609,
+      "data_file": "travel/okern.json"
+    },
+    {
+      "id": "solli-plass",
+      "name": "Solli plass",
+      "latitude": 59.914768,
+      "longitude": 10.717914,
+      "data_file": "travel/solli-plass.json"
+    }
+  ]
+}
