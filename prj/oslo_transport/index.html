@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f3ed" />
+    <title>Oslo travel-time map</title>
+    <script type="module" crossorigin src="./assets/index-DTK7Wq5P.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DwE25pU5.css">
+  </head>
+  <body>
+    <main id="app">
+      <div id="map" aria-label="Travel time map of Oslo"></div>
+      <section class="panel">
+        <button id="info-button" class="info-button" type="button" aria-label="About the travel-time data" aria-expanded="false" aria-controls="data-info">i</button>
+        <div id="data-info" class="info-popover" role="note" hidden>
+          <strong>About the data</strong>
+          <p>Commute times were precomputed from each map cell for journeys arriving by 08:00 on Tuesday, 15 September 2026. For reference only—check current journeys before travelling.</p>
+          <p>Coverage boundaries were simplified from <a href="https://kart.ssb.no/api/ogc/v1/tettsted_ogc_api/collections/tettsted_2026/items" target="_blank" rel="noopener noreferrer">Statistics Norway data</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a>).</p>
+        </div>
+        <p class="eyebrow">Oslo commute map</p>
+        <h1>Travel time to <span id="destination-name">a destination</span></h1>
+        <label class="field-label" for="destination-select">Destination</label>
+        <select id="destination-select" disabled></select>
+        <div class="filter-heading">
+          <label class="field-label" for="commute-limit">Maximum commute</label>
+          <output id="commute-limit-value" for="commute-limit">All</output>
+        </div>
+        <input id="commute-limit" class="commute-slider" type="range" min="5" max="60" step="5" value="60" disabled>
+        <div class="slider-scale" aria-hidden="true"><span>5</span><span>30</span><span>∞</span></div>
+        <div class="progress-row">
+          <span class="pulse" aria-hidden="true"></span>
+          <span id="progress" aria-live="polite">Loading static map data…</span>
+        </div>
+        <div id="legend" class="legend" aria-label="Travel time legend"></div>
+        <p class="data-source">Contains processed data from <a href="https://developer.entur.no/docs/open-services/journey-planner" target="_blank" rel="noopener noreferrer">Entur Journey Planner</a> (<a href="https://data.norge.no/nlod/en/2.0" target="_blank" rel="noopener noreferrer">NLOD 2.0</a>).</p>
+      </section>
+    </main>
+  </body>
+</html>
